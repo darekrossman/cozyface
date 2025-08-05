@@ -1,0 +1,182 @@
+{
+  "8": {
+    "inputs": {
+      "samples": [
+        "143",
+        0
+      ],
+      "vae": [
+        "184",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "30": {
+    "inputs": {
+      "max_shift": 1.4000000000000004,
+      "base_shift": 0.6500000000000001,
+      "width": [
+        "51",
+        1
+      ],
+      "height": [
+        "51",
+        2
+      ],
+      "model": [
+        "150",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingFlux",
+    "_meta": {
+      "title": "ModelSamplingFlux"
+    }
+  },
+  "50": {
+    "inputs": {
+      "seed": -1
+    },
+    "class_type": "Seed (rgthree)",
+    "_meta": {
+      "title": "Seed (rgthree)"
+    }
+  },
+  "51": {
+    "inputs": {
+      "resolution": "1024x1024 (1.0)",
+      "batch_size": 1,
+      "width_override": 0,
+      "height_override": 0
+    },
+    "class_type": "SDXLEmptyLatentSizePicker+",
+    "_meta": {
+      "title": "🔧 Empty Latent Size Picker"
+    }
+  },
+  "143": {
+    "inputs": {
+      "seed": [
+        "50",
+        0
+      ],
+      "steps": 28,
+      "cfg": 1,
+      "sampler_name": "gradient_estimation",
+      "scheduler": "kl_optimal",
+      "denoise": 1,
+      "model": [
+        "30",
+        0
+      ],
+      "positive": [
+        "151",
+        0
+      ],
+      "negative": [
+        "169",
+        0
+      ],
+      "latent_image": [
+        "51",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "150": {
+    "inputs": {
+      "sage_attention": "disabled",
+      "model": [
+        "186",
+        0
+      ]
+    },
+    "class_type": "PathchSageAttentionKJ",
+    "_meta": {
+      "title": "Patch Sage Attention KJ"
+    }
+  },
+  "151": {
+    "inputs": {
+      "clip_l": "",
+      "t5xxl": "grotesque, deformed, deconstructed vulgar detail, ordered chaos, fucked media-mixture fuckfest with hyper amateur boils, compressed in time, missing face spun up humanoid distortion, fashionista cuck slices, tepid crust - baked mood finger, irreverent is the norm, not the exception, screw the fuck to the cunt, shit in the haze, penetrating genitalia under beef milk and architecture given the gaze caught on film.\n\nA resonant hum vibrates from deep within uncharted territories – the esoteric knowledge hidden within each erotic contact point. it feels like the growth's first ejaculation, seeding all existence with potential, and anus-colored phallus calling out to breast of velvet",
+      "guidance": 2.1,
+      "clip": [
+        "215",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncodeFlux",
+    "_meta": {
+      "title": "CLIPTextEncodeFlux"
+    }
+  },
+  "169": {
+    "inputs": {
+      "conditioning": [
+        "151",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "ConditioningZeroOut"
+    }
+  },
+  "184": {
+    "inputs": {
+      "vae_name": "ae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "186": {
+    "inputs": {
+      "model_path": "nunchaku\\svdq-int4_r32-flux.1-krea-dev.safetensors",
+      "cache_threshold": 0,
+      "attention": "nunchaku-fp16",
+      "cpu_offload": "auto",
+      "device_id": 0,
+      "data_type": "bfloat16",
+      "i2f_mode": "enabled"
+    },
+    "class_type": "NunchakuFluxDiTLoader",
+    "_meta": {
+      "title": "Nunchaku FLUX DiT Loader"
+    }
+  },
+  "215": {
+    "inputs": {
+      "model_type": "flux.1",
+      "text_encoder1": "clip_l.safetensors",
+      "text_encoder2": "t5xxl_fp16.safetensors",
+      "t5_min_length": 512
+    },
+    "class_type": "NunchakuTextEncoderLoaderV2",
+    "_meta": {
+      "title": "Nunchaku Text Encoder Loader V2"
+    }
+  },
+  "216": {
+    "inputs": {
+      "images": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "SaveImageWebsocket",
+    "_meta": {
+      "title": "SaveImageWebsocket"
+    }
+  }
+}
