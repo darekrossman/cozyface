@@ -103,44 +103,6 @@ export default function ComfyUIDemo() {
     }
   }, [promptText, guidance, steps]);
 
-  // Throttled effect for realtime feedback
-  // useEffect(() => {
-  //   if (!promptText.trim() || !connected) {
-  //     return;
-  //   }
-
-  //   const now = Date.now();
-  //   const timeSinceLastExecution = now - lastExecutionRef.current;
-    
-  //   if (timeSinceLastExecution >= throttleTime) {
-  //     // Execute immediately if enough time has passed
-  //     generateImage();
-  //     lastExecutionRef.current = now;
-  //     pendingCallRef.current = false;
-  //   } else {
-  //     // Schedule execution for later if not enough time has passed
-  //     if (!pendingCallRef.current) {
-  //       pendingCallRef.current = true;
-  //       const timeToWait = throttleTime - timeSinceLastExecution;
-        
-  //       throttleTimeoutRef.current = setTimeout(() => {
-  //         if (pendingCallRef.current) {
-  //           generateImage();
-  //           lastExecutionRef.current = Date.now();
-  //           pendingCallRef.current = false;
-  //         }
-  //       }, timeToWait);
-  //     }
-  //   }
-
-  //   return () => {
-  //     if (throttleTimeoutRef.current) {
-  //       clearTimeout(throttleTimeoutRef.current);
-  //       throttleTimeoutRef.current = null;
-  //     }
-  //   };
-  // }, [promptText, negativePromptText, cfg, steps, generateImage, connected]);
-
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <h1>Image Generator</h1>
@@ -163,23 +125,6 @@ export default function ComfyUIDemo() {
           />
         </label>
       </div>
-
-      {/* <div style={{ marginBottom: '20px' }}>
-        <label>
-          Negative Prompt:
-          <input
-            type="text"
-            value={negativePromptText}
-            onChange={(e) => setNegativePromptText(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '8px',
-              marginTop: '5px',
-              fontSize: '16px'
-            }}
-          />
-        </label>
-      </div> */}
 
       <div style={{ marginBottom: '20px' }}>
         <label>
