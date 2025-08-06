@@ -29,6 +29,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import workflow from "@/workflows/Nunchaku Flux Krea API.json";
 import { getImages, type Prompt } from "../app/comfyui-client-browser";
+import { Badge } from "./ui/badge";
 
 interface Generation {
 	id: string;
@@ -125,7 +126,7 @@ export default function ImageGeneration() {
 
 	const [genParams, setGenParams] = useState({
 		prompt:
-			"A grotesque, dystopian hellscape, deconstructured and abstracted into bovlinic forms. Networks of disembodied eyes, dripping with blood, watch from the shadows.",
+			"A grotesque, dystopian collage, deconstructed and fragmented human forms.",
 		guidance: 2,
 		steps: 28,
 		sampler: "dpmpp_2m",
@@ -294,134 +295,146 @@ export default function ImageGeneration() {
 	};
 
 	return (
-		<div className="p-5 max-w-4xl mx-auto">
-			<form
-				onSubmit={(e) => {
-					e.preventDefault();
-					generateImage();
-				}}
-			>
-				<div className="relative">
-					<Textarea
-						ref={textareaRef}
-						className="min-h-14 resize-none pr-24 pl-4 py-4 w-full"
-						value={genParams.prompt}
-						onChange={handleTextareaChange}
-					/>
+		<div className="w-full relative">
+			<div className="grid grid-cols-12 gap-4 h-auto sticky px-6 py-4 top-0 z-50">
+				<div className="col-span-9">
+					<form
+						className="w-full"
+						onSubmit={(e) => {
+							e.preventDefault();
+							generateImage();
+						}}
+					>
+						<div className="relative">
+							<Textarea
+								ref={textareaRef}
+								className="min-h-14 resize-none pr-24 pl-4 py-4 w-full dark:bg-card"
+								value={genParams.prompt}
+								onChange={handleTextareaChange}
+							/>
 
-					<div className="absolute right-2 top-2 flex items-center gap-1">
-						<Button type="submit" variant="outline" className="h-10 w-10">
-							<Send />
-						</Button>
-
-						<Popover>
-							<PopoverTrigger asChild>
-								<Button variant="outline" className="h-10 w-10">
-									<Settings2 />
+							<div className="absolute right-2 top-2 flex items-center gap-1">
+								<Button type="submit" variant="ghost" className="h-10 w-10">
+									<Send />
 								</Button>
-							</PopoverTrigger>
-							<PopoverContent
-								align="end"
-								sideOffset={16}
-								alignOffset={-8}
-								onOpenAutoFocus={(e) => e.preventDefault()}
-							>
-								<div className="grid grid-cols-2 gap-4">
-									<div className="grid w-full items-center gap-1">
-										<Label htmlFor="guidance" className="text-xs">
-											Guidance
-										</Label>
-										<Input
-											id="guidance"
-											type="number"
-											step="0.1"
-											value={genParams.guidance}
-											onChange={(e) =>
-												setGenParams({
-													...genParams,
-													guidance: parseFloat(e.target.value),
-												})
-											}
-										/>
-									</div>
-									<div className="grid w-full items-center gap-1">
-										<Label htmlFor="steps" className="text-xs">
-											Steps
-										</Label>
-										<Input
-											id="steps"
-											type="number"
-											min="1"
-											value={genParams.steps}
-											onChange={(e) =>
-												setGenParams({
-													...genParams,
-													steps: parseInt(e.target.value) || 1,
-												})
-											}
-										/>
-									</div>
 
-									<div className="grid w-full items-center gap-1 col-span-2">
-										<Label htmlFor="sampler" className="text-xs">
-											Sampler
-										</Label>
-										<Select
-											value={genParams.sampler}
-											onValueChange={(value) =>
-												setGenParams({ ...genParams, sampler: value })
-											}
-										>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="Select sampler" />
-											</SelectTrigger>
-											<SelectContent>
-												{samplers.map((sampler) => (
-													<SelectItem key={sampler} value={sampler}>
-														{sampler}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="grid w-full items-center gap-1 col-span-2">
-										<Label htmlFor="scheduler" className="text-xs">
-											Scheduler
-										</Label>
-										<Select
-											value={genParams.scheduler}
-											onValueChange={(value) =>
-												setGenParams({ ...genParams, scheduler: value })
-											}
-										>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="Select scheduler" />
-											</SelectTrigger>
-											<SelectContent>
-												{schedulers.map((scheduler) => (
-													<SelectItem key={scheduler} value={scheduler}>
-														{scheduler}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</div>
-								</div>
-							</PopoverContent>
-						</Popover>
+								<Popover>
+									<PopoverTrigger asChild>
+										<Button variant="ghost" className="h-10 w-10">
+											<Settings2 />
+										</Button>
+									</PopoverTrigger>
+									<PopoverContent
+										align="end"
+										sideOffset={16}
+										alignOffset={-8}
+										onOpenAutoFocus={(e) => e.preventDefault()}
+									>
+										<div className="grid grid-cols-2 gap-4">
+											<div className="grid w-full items-center gap-1">
+												<Label htmlFor="guidance" className="text-xs">
+													Guidance
+												</Label>
+												<Input
+													id="guidance"
+													type="number"
+													step="0.1"
+													value={genParams.guidance}
+													onChange={(e) =>
+														setGenParams({
+															...genParams,
+															guidance: parseFloat(e.target.value),
+														})
+													}
+												/>
+											</div>
+											<div className="grid w-full items-center gap-1">
+												<Label htmlFor="steps" className="text-xs">
+													Steps
+												</Label>
+												<Input
+													id="steps"
+													type="number"
+													min="1"
+													value={genParams.steps}
+													onChange={(e) =>
+														setGenParams({
+															...genParams,
+															steps: parseInt(e.target.value) || 1,
+														})
+													}
+												/>
+											</div>
+
+											<div className="grid w-full items-center gap-1 col-span-2">
+												<Label htmlFor="sampler" className="text-xs">
+													Sampler
+												</Label>
+												<Select
+													value={genParams.sampler}
+													onValueChange={(value) =>
+														setGenParams({ ...genParams, sampler: value })
+													}
+												>
+													<SelectTrigger className="w-full">
+														<SelectValue placeholder="Select sampler" />
+													</SelectTrigger>
+													<SelectContent>
+														{samplers.map((sampler) => (
+															<SelectItem key={sampler} value={sampler}>
+																{sampler}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
+											<div className="grid w-full items-center gap-1 col-span-2">
+												<Label htmlFor="scheduler" className="text-xs">
+													Scheduler
+												</Label>
+												<Select
+													value={genParams.scheduler}
+													onValueChange={(value) =>
+														setGenParams({ ...genParams, scheduler: value })
+													}
+												>
+													<SelectTrigger className="w-full">
+														<SelectValue placeholder="Select scheduler" />
+													</SelectTrigger>
+													<SelectContent>
+														{schedulers.map((scheduler) => (
+															<SelectItem key={scheduler} value={scheduler}>
+																{scheduler}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
+										</div>
+									</PopoverContent>
+								</Popover>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div className="col-span-3">
+					<div className="bg-card h-14 p-4 rounded-sm">
+						<h2 className="text-sm font-medium">Settings</h2>
 					</div>
 				</div>
+			</div>
 
-				{globalError && (
-					<div className="mt-5 p-2.5 bg-red-50 text-red-600 rounded">
-						Error: {globalError}
-					</div>
-				)}
+			{globalError && (
+				<div className="mt-5 p-2.5 bg-red-50 text-red-600 rounded">
+					Error: {globalError}
+				</div>
+			)}
 
-				<div className="h-10" />
+			<div className="h-10" />
 
+			<div className="pl-2 pr-8">
 				{generations.length > 0 && (
-					<div className="flex flex-col gap-10">
+					<div className="flex flex-col gap-6">
 						{generations.map((generation) => (
 							<div key={generation.id}>
 								{generation.error && (
@@ -430,13 +443,13 @@ export default function ImageGeneration() {
 									</div>
 								)}
 
-								<div className="flex flex-col gap-4">
-									<div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
+								<div className="grid grid-cols-16 gap-6">
+									<div className="grid gap-2 grid-cols-2 lg:grid-cols-4 col-span-11">
 										{generation.isLoading
 											? Array.from({ length: batchSize }).map((_, index) => (
 													<div
 														key={`${generation.id}-placeholder-${index}`}
-														className="w-full aspect-square bg-gray-800 rounded-lg flex items-center justify-center animate-pulse"
+														className="w-full aspect-square bg-input rounded-sm flex items-center justify-center animate-pulse"
 													/>
 												))
 											: generation.images.map((imageUrl, index) => (
@@ -462,29 +475,29 @@ export default function ImageGeneration() {
 												))}
 									</div>
 
-									<div className="flex items-start justify-between gap-6">
-										<div className="flex flex-col gap-1">
-											<div className="text-xs text-gray-400 leading-5">
+									<div className="flex flex-col justify-between gap-6 col-span-5">
+										<div className="flex flex-col gap-2">
+											<div className="text-xs text-gray-300 leading-5 text-pretty">
 												{generation.prompt}
 											</div>
-											<div className="flex gap-2">
-												<div className="text-xs text-gray-500">
+											<div className="flex gap-1">
+												<Badge variant="secondary" className="opacity-40">
 													{generation.sampler} / {generation.scheduler}
-												</div>
-												<div className="text-xs text-gray-500">
+												</Badge>
+												<Badge variant="secondary" className="opacity-40">
 													Steps: {generation.steps}
-												</div>
-												<div className="text-xs text-gray-500">
+												</Badge>
+												<Badge variant="secondary" className="opacity-40">
 													Guidance: {generation.guidance}
-												</div>
+												</Badge>
 											</div>
 										</div>
 
-										<div>
+										<div className="ml-[-8px]">
 											<Button
 												variant="ghost"
-												size="sm"
-												className="flex py-0 px-0 h-auto w-auto text-xs text-gray-500 hover:text-gray-400 dark:hover:bg-transparent hover:bg-transparent has-[svg]:px-0 leading-5"
+												size="xs"
+												className="text-muted-foreground"
 											>
 												<RotateCcw strokeWidth={1} className="size-[14px]" />
 												Rerun
@@ -496,34 +509,34 @@ export default function ImageGeneration() {
 						))}
 					</div>
 				)}
+			</div>
 
-				{/* Image viewer dialog */}
-				<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-					<DialogContent className="lg:max-w-5xl max-h-[100dvh] overflow-hidden">
-						<DialogHeader>
-							<VisuallyHidden asChild>
-								<DialogTitle>Image View</DialogTitle>
-							</VisuallyHidden>
-							<VisuallyHidden asChild>
-								<DialogDescription>
-									{selectedGeneration?.prompt}
-								</DialogDescription>
-							</VisuallyHidden>
-						</DialogHeader>
-						{selectedGeneration?.images[selectedImageIndex] && (
-							<div className="flex justify-center items-center max-h-[100dvh] overflow-hidden">
-								<Image
-									src={selectedGeneration.images[selectedImageIndex]}
-									alt={`Generated image ${selectedImageIndex + 1} for: ${selectedGeneration.prompt}`}
-									width={1024}
-									height={1024}
-									className="max-w-full max-h-full object-contain rounded-sm"
-								/>
-							</div>
-						)}
-					</DialogContent>
-				</Dialog>
-			</form>
+			{/* Image viewer dialog */}
+			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+				<DialogContent className="lg:max-w-5xl max-h-[100dvh] overflow-hidden">
+					<DialogHeader>
+						<VisuallyHidden asChild>
+							<DialogTitle>Image View</DialogTitle>
+						</VisuallyHidden>
+						<VisuallyHidden asChild>
+							<DialogDescription>
+								{selectedGeneration?.prompt}
+							</DialogDescription>
+						</VisuallyHidden>
+					</DialogHeader>
+					{selectedGeneration?.images[selectedImageIndex] && (
+						<div className="flex justify-center items-center max-h-[100dvh] overflow-hidden">
+							<Image
+								src={selectedGeneration.images[selectedImageIndex]}
+								alt={`Generated image ${selectedImageIndex + 1} for: ${selectedGeneration.prompt}`}
+								width={1024}
+								height={1024}
+								className="max-w-full max-h-full object-contain rounded-sm"
+							/>
+						</div>
+					)}
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
