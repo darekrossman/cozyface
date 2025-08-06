@@ -4,14 +4,12 @@ import { Send, Settings2 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +42,12 @@ export default function ImageGeneration() {
 	const [steps, setSteps] = useState(28);
 
 	const [globalError, setGlobalError] = useState<string | null>(null);
+
+	// Dialog state for image viewer
+	const [dialogOpen, setDialogOpen] = useState(false);
+	const [selectedGeneration, setSelectedGeneration] =
+		useState<Generation | null>(null);
+	const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
 	const wsRef = useRef<WebSocket | null>(null);
 	const clientIdRef = useRef("comfyui-browser-demo");
@@ -119,6 +123,16 @@ export default function ImageGeneration() {
 			}
 		};
 	}, []);
+
+	// Handle image click to open dialog
+	const handleImageClick = useCallback(
+		(generation: Generation, imageIndex: number) => {
+			setSelectedGeneration(generation);
+			setSelectedImageIndex(imageIndex);
+			setDialogOpen(true);
+		},
+		[],
+	);
 
 	const generateImage = useCallback(async () => {
 		if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -276,18 +290,25 @@ export default function ImageGeneration() {
 												))
 											: // Show actual images
 												generation.images.map((imageUrl, index) => (
-													<Image
+													<button
 														key={`${generation.id}-${index}`}
-														src={imageUrl}
-														alt={`Generated image ${index + 1} for: ${generation.prompt}`}
-														width={1024}
-														height={1024}
-														className="w-full h-auto aspect-square object-cover rounded-lg shadow-md"
-														onLoad={() => {
-															// Clean up object URL after image loads
-															// URL.revokeObjectURL(imageUrl);
-														}}
-													/>
+														type="button"
+														className="cursor-pointer border-0 p-0 bg-transparent"
+														onClick={() => handleImageClick(generation, index)}
+														aria-label={`View generated image ${index + 1} in larger size`}
+													>
+														<Image
+															src={imageUrl}
+															alt={`Generated image ${index + 1} for: ${generation.prompt}`}
+															width={1024}
+															height={1024}
+															className="w-full h-auto aspect-square object-cover rounded-lg shadow-md hover:opacity-90 transition-opacity"
+															onLoad={() => {
+																// Clean up object URL after image loads
+																// URL.revokeObjectURL(imageUrl);
+															}}
+														/>
+													</button>
 												))}
 									</div>
 
@@ -299,6 +320,29 @@ export default function ImageGeneration() {
 						))}
 					</div>
 				)}
+
+				{/* Image viewer dialog */}
+				<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+					<DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+						<DialogHeader>
+							<DialogTitle>Image View</DialogTitle>
+							<DialogDescription>
+								{selectedGeneration?.prompt}
+							</DialogDescription>
+						</DialogHeader>
+						{selectedGeneration?.images[selectedImageIndex] && (
+							<div className="flex justify-center items-center max-h-[70vh] overflow-hidden">
+								<Image
+									src={selectedGeneration.images[selectedImageIndex]}
+									alt={`Generated image ${selectedImageIndex + 1} for: ${selectedGeneration.prompt}`}
+									width={1024}
+									height={1024}
+									className="max-w-full max-h-full object-contain rounded-lg"
+								/>
+							</div>
+						)}
+					</DialogContent>
+				</Dialog>
 			</form>
 		</div>
 	);
