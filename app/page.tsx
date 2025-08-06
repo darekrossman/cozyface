@@ -1,5 +1,5 @@
-import ComfyUIDemo from "./components/ComfyUIDemo";
+import ImageGeneration from "../components/image-generation";
 
 export default function Home() {
-  return <ComfyUIDemo />;
+  return <ImageGeneration />;
 }
