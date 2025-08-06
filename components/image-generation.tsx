@@ -30,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import workflow from "@/workflows/Nunchaku Flux Krea API.json";
 import { getImages, type Prompt } from "../app/comfyui-client-browser";
 import { Badge } from "./ui/badge";
+import { Skeleton } from "./ui/skeleton";
 
 interface Generation {
 	id: string;
@@ -38,6 +39,7 @@ interface Generation {
 	guidance: number;
 	sampler: string;
 	scheduler: string;
+	aspectRatio: string;
 	images: string[];
 	isLoading: boolean;
 	error?: string;
@@ -119,6 +121,31 @@ const schedulers = [
 	"beta57",
 ];
 
+const aspectRatios = [
+	"1:1 (Perfect Square)",
+	"2:3 (Classic Portrait)",
+	"3:4 (Golden Ratio)",
+	"3:5 (Elegant Vertical)",
+	"4:5 (Artistic Frame)",
+	"5:7 (Balanced Portrait)",
+	"5:8 (Tall Portrait)",
+	"7:9 (Modern Portrait)",
+	"9:16 (Slim Vertical)",
+	"9:19 (Tall Slim)",
+	"9:21 (Ultra Tall)",
+	"9:32 (Skyline)",
+	"3:2 (Golden Landscape)",
+	"4:3 (Classic Landscape)",
+	"5:3 (Wide Horizon)",
+	"5:4 (Balanced Frame)",
+	"7:5 (Elegant Landscape)",
+	"8:5 (Cinematic View)",
+	"9:7 (Artful Horizon)",
+	"16:9 (Panorama)",
+	"19:9 (Cinematic Ultrawide)",
+	"21:9 (Epic Ultrawide)",
+];
+
 export default function ImageGeneration() {
 	const [generations, setGenerations] = useState<Generation[]>([]);
 
@@ -130,8 +157,12 @@ export default function ImageGeneration() {
 		guidance: 2,
 		steps: 28,
 		sampler: "dpmpp_2m",
-		scheduler: "beta",
+		scheduler: "beta57",
+		aspectRatio: "1:1 (Perfect Square)",
 	});
+
+	const aspectRatioBase = genParams.aspectRatio.split(" ")[0];
+	const aspectRatioCSS = aspectRatioBase.replace(":", "/");
 
 	const [globalError, setGlobalError] = useState<string | null>(null);
 
@@ -235,6 +266,7 @@ export default function ImageGeneration() {
 			guidance: genParams.guidance,
 			sampler: genParams.sampler,
 			scheduler: genParams.scheduler,
+			aspectRatio: genParams.aspectRatio,
 			images: [],
 			isLoading: true,
 		};
@@ -242,6 +274,7 @@ export default function ImageGeneration() {
 		// Prepend the new generation to the list
 		setGenerations((prev) => [newGeneration, ...prev]);
 		setGlobalError(null);
+		setGenParams((prev) => ({ ...prev, prompt: "" }));
 
 		const prompt: Prompt = workflow;
 
@@ -251,8 +284,10 @@ export default function ImageGeneration() {
 		prompt["143"].inputs.steps = newGeneration.steps;
 		prompt["143"].inputs.sampler_name = newGeneration.sampler;
 		prompt["143"].inputs.scheduler = newGeneration.scheduler;
-
 		prompt["143"].inputs.seed = Math.floor(Math.random() * 1000000000000000);
+
+		prompt["217"].inputs.aspect_ratio = newGeneration.aspectRatio;
+
 		prompt["51"].inputs.batch_size = batchSize;
 
 		try {
@@ -309,6 +344,7 @@ export default function ImageGeneration() {
 							<Textarea
 								ref={textareaRef}
 								className="min-h-14 resize-none pr-24 pl-4 py-4 w-full dark:bg-card"
+								placeholder="Enter your prompt..."
 								value={genParams.prompt}
 								onChange={handleTextareaChange}
 							/>
@@ -410,6 +446,28 @@ export default function ImageGeneration() {
 													</SelectContent>
 												</Select>
 											</div>
+											<div className="grid w-full items-center gap-1 col-span-2">
+												<Label htmlFor="aspectRatio" className="text-xs">
+													Aspect Ratio
+												</Label>
+												<Select
+													value={genParams.aspectRatio}
+													onValueChange={(value) =>
+														setGenParams({ ...genParams, aspectRatio: value })
+													}
+												>
+													<SelectTrigger className="w-full">
+														<SelectValue placeholder="Select aspect ratio" />
+													</SelectTrigger>
+													<SelectContent>
+														{aspectRatios.map((ratio) => (
+															<SelectItem key={ratio} value={ratio}>
+																{ratio}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
 										</div>
 									</PopoverContent>
 								</Popover>
@@ -435,78 +493,115 @@ export default function ImageGeneration() {
 			<div className="pl-2 pr-8">
 				{generations.length > 0 && (
 					<div className="flex flex-col gap-6">
-						{generations.map((generation) => (
-							<div key={generation.id}>
-								{generation.error && (
-									<div className="text-sm text-red-600 p-2 bg-red-50 rounded border border-red-200 mb-4">
-										Error: {generation.error}
-									</div>
-								)}
+						{generations.map((generation) => {
+							const [x, y] = generation.aspectRatio
+								.split(" ")[0]
+								.split(":")
+								.map(Number);
+							const isLandscape = x / y > 1;
 
-								<div className="grid grid-cols-16 gap-6">
-									<div className="grid gap-2 grid-cols-2 lg:grid-cols-4 col-span-11">
-										{generation.isLoading
-											? Array.from({ length: batchSize }).map((_, index) => (
-													<div
-														key={`${generation.id}-placeholder-${index}`}
-														className="w-full aspect-square bg-input rounded-sm flex items-center justify-center animate-pulse"
-													/>
-												))
-											: generation.images.map((imageUrl, index) => (
-													<button
-														key={`${generation.id}-${index}`}
-														type="button"
-														className="cursor-pointer border-0 p-0 bg-transparent"
-														onClick={() => handleImageClick(generation, index)}
-														aria-label={`View generated image ${index + 1} in larger size`}
-													>
-														<Image
-															src={imageUrl}
-															alt={`Generated image ${index + 1} for: ${generation.prompt}`}
-															width={1024}
-															height={1024}
-															className="w-full h-auto aspect-square object-cover rounded-sm shadow-md hover:opacity-90 transition-opacity"
-															onLoad={() => {
-																// Clean up object URL after image loads
-																// URL.revokeObjectURL(imageUrl);
-															}}
+							return (
+								<div key={generation.id}>
+									{generation.error && (
+										<div className="text-sm text-red-600 p-2 bg-red-50 rounded border border-red-200 mb-4">
+											Error: {generation.error}
+										</div>
+									)}
+
+									<div className="grid grid-cols-16 gap-6">
+										<div
+											className={`grid gap-2 ${
+												isLandscape ? "grid-cols-2" : "grid-cols-4"
+											} col-span-11`}
+											style={
+												{
+													"--aspect-ratio": generation.aspectRatio
+														.split(" ")[0]
+														.replace(":", "/"),
+												} as React.CSSProperties
+											}
+										>
+											{generation.isLoading
+												? Array.from({ length: batchSize }).map((_, index) => (
+														<Skeleton
+															key={`${generation.id}-placeholder-${index}`}
+															className={`w-full aspect-[var(--aspect-ratio)] rounded-sm`}
 														/>
-													</button>
-												))}
-									</div>
-
-									<div className="flex flex-col justify-between gap-6 col-span-5">
-										<div className="flex flex-col gap-2">
-											<div className="text-xs text-gray-300 leading-5 text-pretty">
-												{generation.prompt}
-											</div>
-											<div className="flex gap-1">
-												<Badge variant="secondary" className="opacity-40">
-													{generation.sampler} / {generation.scheduler}
-												</Badge>
-												<Badge variant="secondary" className="opacity-40">
-													Steps: {generation.steps}
-												</Badge>
-												<Badge variant="secondary" className="opacity-40">
-													Guidance: {generation.guidance}
-												</Badge>
-											</div>
+													))
+												: generation.images.map((imageUrl, index) => (
+														<button
+															key={`${generation.id}-${index}`}
+															type="button"
+															className="flex cursor-pointer border-0 p-0 bg-transparent"
+															onClick={() =>
+																handleImageClick(generation, index)
+															}
+															aria-label={`View generated image ${index + 1} in larger size`}
+														>
+															<Image
+																src={imageUrl}
+																alt={`Generated image ${index + 1} for: ${generation.prompt}`}
+																width={1024}
+																height={1024}
+																className={`w-full h-auto aspect-[var(--aspect-ratio)] object-cover rounded-sm shadow-md hover:opacity-90 transition-opacity`}
+																onLoad={() => {
+																	// Clean up object URL after image loads
+																	// URL.revokeObjectURL(imageUrl);
+																}}
+															/>
+														</button>
+													))}
 										</div>
 
-										<div className="ml-[-8px]">
-											<Button
-												variant="ghost"
-												size="xs"
-												className="text-muted-foreground"
-											>
-												<RotateCcw strokeWidth={1} className="size-[14px]" />
-												Rerun
-											</Button>
+										<div className="flex flex-col justify-between gap-6 col-span-5">
+											<div className="flex flex-col gap-2">
+												<button
+													type="button"
+													className="text-xs text-gray-300 leading-5 text-pretty text-left hover:opacity-70 cursor-pointer transition-opacity"
+													onClick={() => {
+														setGenParams((prev) => ({
+															...prev,
+															prompt: generation.prompt,
+														}));
+													}}
+												>
+													{generation.prompt}
+												</button>
+												<div className="flex gap-1 flex-wrap">
+													<Badge variant="secondary" className="opacity-40">
+														{generation.sampler} / {generation.scheduler}
+													</Badge>
+													<Badge variant="secondary" className="opacity-40">
+														Steps: {generation.steps}
+													</Badge>
+													<Badge variant="secondary" className="opacity-40">
+														CFG: {generation.guidance}
+													</Badge>
+													<Badge variant="secondary" className="opacity-40">
+														AR: {generation.aspectRatio.split(" ")[0]}
+													</Badge>
+												</div>
+											</div>
+
+											<div className="ml-[-8px]">
+												<Button
+													variant="ghost"
+													size="xs"
+													className="text-muted-foreground"
+													onClick={() => {
+														setGenParams(generation);
+														generateImage();
+													}}
+												>
+													<RotateCcw strokeWidth={1} className="size-[14px]" />
+													Rerun
+												</Button>
+											</div>
 										</div>
 									</div>
 								</div>
-							</div>
-						))}
+							);
+						})}
 					</div>
 				)}
 			</div>

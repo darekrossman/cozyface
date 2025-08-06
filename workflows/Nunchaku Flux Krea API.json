@@ -34,9 +34,9 @@
 	"51": {
 		"inputs": {
 			"resolution": "1024x1024 (1.0)",
-			"batch_size": 4,
-			"width_override": 0,
-			"height_override": 0
+			"batch_size": 1,
+			"width_override": ["217", 0],
+			"height_override": ["217", 1]
 		},
 		"class_type": "SDXLEmptyLatentSizePicker+",
 		"_meta": {
@@ -135,6 +135,19 @@
 		"class_type": "SaveImageWebsocket",
 		"_meta": {
 			"title": "SaveImageWebsocket"
+		}
+	},
+	"217": {
+		"inputs": {
+			"megapixel": "1.0",
+			"aspect_ratio": "9:21 (Ultra Tall)",
+			"divisible_by": "64",
+			"custom_ratio": false,
+			"custom_aspect_ratio": "1:1"
+		},
+		"class_type": "FluxResolutionNode",
+		"_meta": {
+			"title": "Flux Resolution Calc"
 		}
 	}
 }
