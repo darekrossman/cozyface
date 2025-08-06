@@ -1,9 +1,20 @@
 "use client";
 
-import { Loader2Icon, Send, Settings2 } from "lucide-react";
+import { Send, Settings2 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
 	Popover,
 	PopoverContent,
@@ -12,9 +23,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import workflow from "@/workflows/Nunchaku Flux Krea API.json";
 import { getImages, type Prompt } from "../app/comfyui-client-browser";
-import { Card } from "./ui/card";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 
 interface Generation {
 	id: string;
@@ -29,7 +37,9 @@ export default function ImageGeneration() {
 	const [promptText, setPromptText] = useState(
 		"Portrait of a cyberpunk cyborg in a dystopian alley",
 	);
-	const [batchSize, setBatchSize] = useState(2);
+
+	const batchSize = 4;
+
 	const [guidance, setGuidance] = useState(2);
 	const [steps, setSteps] = useState(28);
 
@@ -173,10 +183,10 @@ export default function ImageGeneration() {
 				),
 			);
 		}
-	}, [promptText, guidance, steps, batchSize]);
+	}, [promptText, guidance, steps]);
 
 	return (
-		<div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+		<div className="p-5 max-w-4xl mx-auto">
 			<form
 				onSubmit={(e) => {
 					e.preventDefault();
@@ -208,19 +218,23 @@ export default function ImageGeneration() {
 								alignOffset={-8}
 								onOpenAutoFocus={(e) => e.preventDefault()}
 							>
-								<div className="flex gap-2">
-									<div className="grid w-full max-w-sm items-center gap-3 flex-1">
+								<div className="grid grid-cols-2 gap-2">
+									<div className="grid w-full items-center gap-3">
 										<Label htmlFor="guidance">Guidance</Label>
 										<Input
 											id="guidance"
+											type="number"
+											step="0.1"
 											value={guidance}
 											onChange={(e) => setGuidance(parseFloat(e.target.value))}
 										/>
 									</div>
-									<div className="grid w-full max-w-sm items-center gap-3 flex-1">
+									<div className="grid w-full items-center gap-3">
 										<Label htmlFor="steps">Steps</Label>
 										<Input
 											id="steps"
+											type="number"
+											min="1"
 											value={steps}
 											onChange={(e) => setSteps(parseInt(e.target.value) || 1)}
 										/>
@@ -232,15 +246,7 @@ export default function ImageGeneration() {
 				</div>
 
 				{globalError && (
-					<div
-						style={{
-							marginTop: "20px",
-							padding: "10px",
-							backgroundColor: "#fee",
-							color: "#c00",
-							borderRadius: "5px",
-						}}
-					>
+					<div className="mt-5 p-2.5 bg-red-50 text-red-600 rounded">
 						Error: {globalError}
 					</div>
 				)}
@@ -248,77 +254,48 @@ export default function ImageGeneration() {
 				<div className="h-10" />
 
 				{generations.length > 0 && (
-					<div className="flex flex-col gap-4">
+					<div className="flex flex-col gap-8">
 						{generations.map((generation) => (
-							<Card key={generation.id} className="p-4">
+							<div key={generation.id}>
 								{generation.error && (
-									<div
-										style={{
-											fontSize: "14px",
-											color: "#dc2626",
-											padding: "8px",
-											backgroundColor: "#fef2f2",
-											borderRadius: "4px",
-											border: "1px solid #fecaca",
-										}}
-									>
+									<div className="text-sm text-red-600 p-2 bg-red-50 rounded border border-red-200 mb-4">
 										Error: {generation.error}
 									</div>
 								)}
 
-								<div className="grid grid-cols-2 gap-4">
-									{generation.isLoading
-										? Array.from({ length: batchSize }).map((_, index) => (
-												<div
-													key={`${generation.id}-placeholder-${index}`}
-													style={{
-														width: "100%",
-														aspectRatio: "1",
-														backgroundColor: "#e5e7eb",
-														borderRadius: "8px",
-														display: "flex",
-														alignItems: "center",
-														justifyContent: "center",
-														animation:
-															"pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-													}}
-												>
+								<div className="flex flex-col gap-2">
+									<div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
+										{generation.isLoading
+											? Array.from({ length: batchSize }).map((_, index) => (
 													<div
-														style={{
-															width: "40px",
-															height: "40px",
-															borderRadius: "50%",
-															border: "3px solid #f3f4f6",
-															borderTopColor: "#6b7280",
-															animation: "spin 1s linear infinite",
+														key={`${generation.id}-placeholder-${index}`}
+														className="w-full aspect-square bg-gray-800 rounded-lg flex items-center justify-center animate-pulse"
+													>
+														{/* <div className="w-10 h-10 rounded-full border-4 border-gray-100 border-t-gray-500 animate-spin" /> */}
+													</div>
+												))
+											: // Show actual images
+												generation.images.map((imageUrl, index) => (
+													<Image
+														key={`${generation.id}-${index}`}
+														src={imageUrl}
+														alt={`Generated image ${index + 1} for: ${generation.prompt}`}
+														width={1024}
+														height={1024}
+														className="w-full h-auto aspect-square object-cover rounded-lg shadow-md"
+														onLoad={() => {
+															// Clean up object URL after image loads
+															// URL.revokeObjectURL(imageUrl);
 														}}
 													/>
-												</div>
-											))
-										: // Show actual images
-											generation.images.map((imageUrl, index) => (
-												<Image
-													key={`${generation.id}-${index}`}
-													src={imageUrl}
-													alt={`Generated image ${index + 1} for: ${generation.prompt}`}
-													width={1024}
-													height={1024}
-													style={{
-														width: "100%",
-														height: "auto",
-														aspectRatio: "1",
-														objectFit: "cover",
-														borderRadius: "8px",
-														boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-													}}
-													onLoad={() => {
-														// Clean up object URL after image loads
-														// URL.revokeObjectURL(imageUrl);
-													}}
-												/>
-											))}
+												))}
+									</div>
+
+									<div className="text-sm text-gray-500">
+										{generation.prompt}
+									</div>
 								</div>
-							</Card>
+							</div>
 						))}
 					</div>
 				)}
