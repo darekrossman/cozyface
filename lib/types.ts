@@ -9,9 +9,12 @@ export interface GenerationParams {
 
 export interface Generation extends GenerationParams {
 	id: string;
+	userId: string;
 	images: { id: string; url: string }[];
 	isLoading: boolean;
 	error?: string;
+	createdAt: string;
+	updatedAt: string;
 }
 
 export interface GenerationRequestParams {
