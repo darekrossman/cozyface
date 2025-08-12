@@ -1,6 +1,6 @@
 const serverAddress = process.env.NEXT_PUBLIC_COMFYUI_SERVER_ADDRESS;
 
-interface Prompt {
+export interface Prompt {
 	[key: string]: {
 		class_type: string;
 		inputs: Record<string, any>;
@@ -10,11 +10,11 @@ interface Prompt {
 	};
 }
 
-interface QueuePromptResponse {
+export interface QueuePromptResponse {
 	prompt_id: string;
 }
 
-interface Message {
+export interface Message {
 	type: string;
 	data: {
 		prompt_id?: string;
@@ -22,7 +22,7 @@ interface Message {
 	};
 }
 
-async function queuePrompt(
+export async function queuePrompt(
 	prompt: Prompt,
 	clientId: string,
 ): Promise<QueuePromptResponse> {
@@ -37,7 +37,7 @@ async function queuePrompt(
 	return (await response.json()) as QueuePromptResponse;
 }
 
-async function getImage(
+export async function getImage(
 	filename: string,
 	subfolder: string,
 	folderType: string,
@@ -51,12 +51,12 @@ async function getImage(
 	return await response.blob();
 }
 
-async function getHistory(promptId: string): Promise<any> {
+export async function getHistory(promptId: string): Promise<any> {
 	const response = await fetch(`http://${serverAddress}/history/${promptId}`);
 	return await response.json();
 }
 
-async function getImages(
+export async function getImages(
 	ws: WebSocket,
 	prompt: Prompt,
 	clientId: string,
@@ -118,13 +118,3 @@ async function getImages(
 		}
 	});
 }
-
-// Export functions for use in other modules
-export {
-	queuePrompt,
-	getImage,
-	getHistory,
-	getImages,
-	type Prompt,
-	type QueuePromptResponse,
-};

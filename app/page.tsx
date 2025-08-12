@@ -1,5 +1,5 @@
-import ImageGeneration from "../components/image-generation";
+import ImageGeneration from "../components/user-image-list";
 
 export default function Home() {
-  return <ImageGeneration />;
+	return <ImageGeneration />;
 }
