@@ -1,0 +1,4 @@
+{
+  "adapter": "pg",
+  "projectDescription": "This project is about managing a system that handles authentication, authorization, real-time data synchronization, storage, and other related functionalities. It includes features such as multi-factor authentication, object storage, session management, and subscription management for different tenants/users."
+}

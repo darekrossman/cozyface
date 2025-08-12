@@ -1,16 +1,24 @@
+import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import "./globals.css";
 import ImageGenerationForm from "@/components/flux-form";
 import { ImageGenProvider } from "@/components/image-gen-provider";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Layout({
+export default async function Layout({
 	children,
 	modal,
 }: Readonly<{
 	modal: React.ReactNode;
 	children: React.ReactNode;
 }>) {
+	const supabase = await createClient();
+
+	const { data, error } = await supabase.auth.getClaims();
+	if (error || !data?.claims) {
+		redirect("/auth/login");
+	}
+
 	return (
 		<SidebarProvider>
 			<AppSidebar />
