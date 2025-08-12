@@ -30,15 +30,8 @@ interface ImageGenProviderProps {
 }
 
 export function ImageGenProvider({ children }: ImageGenProviderProps) {
-	const {
-		start,
-		results,
-		cancel: cancelGeneration,
-	} = useFluxStream(
-		"https://darekrossman--flux-endpoint-streaming-fluxservice-infere-c484ad.modal.run",
-	);
+	const { start, results, cancel: cancelGeneration } = useFluxStream();
 	const [generationMap, setGenerationMap] = useState<Record<string, Generation>>({});
-
 	const [genParams, setGenParams] = useState<GenerationParams>({
 		prompt: "",
 		guidance: 2,

@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import "./globals.css";
-import ImageGenerationForm from "@/components/flux-form";
-import { ImageGenProvider } from "@/components/image-gen-provider";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -23,39 +19,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
 	children,
-	modal,
 }: Readonly<{
-	modal: React.ReactNode;
 	children: React.ReactNode;
 }>) {
-	console.log(modal);
 	return (
 		<html lang="en">
-			<body className={`${geistSans.variable} ${geistMono.variable} dark`}>
-				<SidebarProvider>
-					<AppSidebar />
-
-					<ImageGenProvider>
-						<main className="w-full relative">
-							{/* <SidebarTrigger /> */}
-
-							<div className="grid grid-cols-12 gap-4 h-auto sticky px-4 py-4 top-0 z-50">
-								<div className="col-span-9">
-									<ImageGenerationForm />
-								</div>
-								<div className="col-span-3">
-									<div className="bg-card h-14 p-4 rounded-sm">
-										<h2 className="text-sm font-medium">Settings</h2>
-									</div>
-								</div>
-							</div>
-
-							{modal}
-							{children}
-						</main>
-					</ImageGenProvider>
-				</SidebarProvider>
-			</body>
+			<body className={`${geistSans.variable} ${geistMono.variable} dark`}>{children}</body>
 		</html>
 	);
 }

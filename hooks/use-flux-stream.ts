@@ -7,7 +7,7 @@ export interface GenerationResult {
 	error: string | null;
 }
 
-export function useFluxStream(endpoint: string) {
+export function useFluxStream() {
 	const [results, setResults] = useState<Record<string, GenerationResult>>({});
 	const controllerRef = useRef<AbortController | null>(null);
 
@@ -32,8 +32,12 @@ export function useFluxStream(endpoint: string) {
 			},
 		}));
 
+		if (!process.env.NEXT_PUBLIC_IMAGE_ENDPOINT) {
+			throw new Error("NEXT_PUBLIC_IMAGE_ENDPOINT is not set");
+		}
+
 		try {
-			const res = await fetch(endpoint, {
+			const res = await fetch(process.env.NEXT_PUBLIC_IMAGE_ENDPOINT, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(payload),
