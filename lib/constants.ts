@@ -1,100 +1,42 @@
-export const samplers = [
-	"euler",
-	"euler_cfg_pp",
-	"euler_ancestral",
-	"euler_ancestral_cfg_pp",
-	"heun",
-	"heunpp2",
-	"dpm_2",
-	"dpm_2_ancestral",
-	"lms",
-	"dpm_fast",
-	"dpm_adaptive",
-	"dpmpp_2s_ancestral",
-	"dpmpp_2s_ancestral_cfg_pp",
-	"dpmpp_sde",
-	"dpmpp_sde_gpu",
-	"dpmpp_2m",
-	"dpmpp_2m_cfg_pp",
-	"dpmpp_2m_sde",
-	"dpmpp_2m_sde_gpu",
-	"dpmpp_3m_sde",
-	"dpmpp_3m_sde_gpu",
-	"ddpm",
-	"lcm",
-	"ipndm",
-	"ipndm_v",
-	"deis",
-	"res_multistep",
-	"res_multistep_cfg_pp",
-	"res_multistep_ancestral",
-	"res_multistep_ancestral_cfg_pp",
-	"gradient_estimation",
-	"gradient_estimation_cfg_pp",
-	"er_sde",
-	"seeds_2",
-	"seeds_3",
-	"sa_solver",
-	"sa_solver_pece",
-	"ddim",
-	"uni_pc",
-	"uni_pc_bh2",
-	"legacy_rk",
-	"rk",
-	"rk_beta",
-	"deis_3m_ode",
-	"deis_2m_ode",
-	"deis_3m",
-	"deis_2m",
-	"res_6s_ode",
-	"res_5s_ode",
-	"res_3s_ode",
-	"res_2s_ode",
-	"res_3m_ode",
-	"res_2m_ode",
-	"res_6s",
-	"res_5s",
-	"res_3s",
-	"res_2s",
-	"res_3m",
-	"res_2m",
-];
-
-export const schedulers = [
-	"simple",
-	"sgm_uniform",
-	"karras",
-	"exponential",
-	"ddim_uniform",
-	"beta",
-	"normal",
-	"linear_quadratic",
-	"kl_optimal",
-	"bong_tangent",
-	"beta57",
-];
-
 export const aspectRatios = [
 	"1:1",
+
 	"2:3",
 	"3:4",
-	"3:5",
 	"4:5",
 	"5:7",
-	"5:8",
-	"7:9",
 	"9:16",
-	"9:19",
 	"9:21",
-	"9:32",
+
 	"3:2",
 	"4:3",
-	"5:3",
 	"5:4",
 	"7:5",
-	"8:5",
-	"9:7",
 	"16:9",
-	"19:9",
 	"21:9",
 ];
+
+export const imageSizes = {
+	"1:1": [1024, 1024], // 1,048,576 pixels
+	"2:3": [864, 1296], // 1,119,744 pixels
+	"3:4": [912, 1216], // 1,109,056 pixels
+	"3:5": [816, 1360], // 1,109,760 pixels
+	"4:5": [960, 1200], // 1,152,000 pixels
+	"5:7": [880, 1232], // 1,084,160 pixels
+	"5:8": [880, 1408], // 1,239,040 pixels
+	"7:9": [896, 1152], // 1,032,192 pixels
+	"9:16": [768, 1360], // 1,044,480 pixels
+	"9:19": [720, 1520], // 1,094,400 pixels
+	"9:21": [672, 1568], // 1,053,696 pixels
+	"9:32": [576, 2048], // 1,179,648 pixels
+	"3:2": [1296, 864], // 1,119,744 pixels
+	"4:3": [1216, 912], // 1,109,056 pixels
+	"5:3": [1360, 816], // 1,109,760 pixels
+	"5:4": [1200, 960], // 1,152,000 pixels
+	"7:5": [1232, 880], // 1,084,160 pixels
+	"8:5": [1408, 880], // 1,239,040 pixels
+	"9:7": [1152, 896], // 1,032,192 pixels
+	"16:9": [1360, 768], // 1,044,480 pixels
+	"19:9": [1520, 720], // 1,094,400 pixels
+	"21:9": [1568, 672], // 1,053,696 pixels
+};

@@ -1,5 +1,5 @@
 import ImageGeneration from "@/components/user-image-list";
 
-export default function ImageGenerationPage() {
+export default async function ImageGenerationPage() {
 	return <ImageGeneration />;
 }

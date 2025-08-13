@@ -6,22 +6,26 @@ import { useImageGen } from "@/components/image-gen-provider";
 export default function UserImageList() {
 	const { generationMap } = useImageGen();
 
+	const sortedGenerationIds = Object.keys(generationMap).sort((a, b) => {
+		const generationA = generationMap[a];
+		const generationB = generationMap[b];
+		return new Date(generationB.createdAt).getTime() - new Date(generationA.createdAt).getTime();
+	});
+
 	return (
-		<div className="w-full relative">
+		<div className="w-full relative pt-[var(--header-height)]">
 			<div className="h-10" />
 
-			<div className="pl-2 pr-8">
+			<div className="">
 				{Object.keys(generationMap).length > 0 && (
 					<div className="flex flex-col gap-6">
-						{Object.keys(generationMap)
-							.reverse()
-							.map((generationId) => {
-								const generation = generationMap[generationId];
-								if (!generation) {
-									return null;
-								}
-								return <GenerationResult key={generation.id} generation={generation} />;
-							})}
+						{sortedGenerationIds.map((generationId) => {
+							const generation = generationMap[generationId];
+							if (!generation) {
+								return null;
+							}
+							return <GenerationResult key={generation.id} generation={generation} />;
+						})}
 					</div>
 				)}
 			</div>

@@ -5,6 +5,7 @@ create table public.generations (
   prompt text not null,
   guidance numeric(3,1) not null check (guidance >= 0 and guidance <= 20),
   steps integer not null check (steps >= 1 and steps <= 100),
+  steps_completed integer not null default 0,
   aspect_ratio text not null,
   output_format text not null,
   batch_size integer not null check (batch_size >= 1 and batch_size <= 10),

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { updateGeneration } from "@/actions/generations";
 import type { GenerationRequestParams } from "@/lib/types";
 
 export interface GenerationResult {
@@ -22,16 +23,6 @@ export function useFluxStream() {
 	}) => {
 		controllerRef.current = new AbortController();
 
-		// Initialize result for this generationId
-		setResults((prev) => ({
-			...prev,
-			[generationId]: {
-				preview: [],
-				urls: [],
-				error: null,
-			},
-		}));
-
 		if (!process.env.NEXT_PUBLIC_IMAGE_ENDPOINT) {
 			throw new Error("NEXT_PUBLIC_IMAGE_ENDPOINT is not set");
 		}
@@ -43,16 +34,33 @@ export function useFluxStream() {
 				body: JSON.stringify(payload),
 				signal: controllerRef.current.signal,
 			});
-			if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+
+			if (!res.ok) {
+				const result = await res.json();
+				throw new Error(JSON.stringify(result));
+			}
+
+			if (!res.body) {
+				throw new Error(`HTTP ${res.status}`);
+			}
+
+			const imageIds = Array.from({ length: batchSize }).map((_) => crypto.randomUUID());
 
 			const reader = res.body.getReader();
 			const decoder = new TextDecoder();
 			let buffer = "";
+
 			for (;;) {
 				const { value, done } = await reader.read();
-				if (done) break;
+
+				if (done) {
+					break;
+				}
+
 				buffer += decoder.decode(value, { stream: true });
+
 				let idx: number = 0;
+
 				// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
 				while ((idx = buffer.indexOf("\n\n")) !== -1) {
 					const chunk = buffer.slice(0, idx);
@@ -61,37 +69,47 @@ export function useFluxStream() {
 						.split("\n")
 						.filter((l) => l.startsWith("data: "))
 						.map((l) => l.slice(6));
-					if (dataLines.length === 0) continue;
-					const msg: { type: string; images: string[]; urls: string[]; message: string } =
-						JSON.parse(dataLines.join("\n"));
 
-					const imageIds = Array.from({ length: batchSize }).map((_) => crypto.randomUUID());
+					if (dataLines.length === 0) {
+						continue;
+					}
 
-					// Update results for this specific generationId
-					setResults((prev) => ({
-						...prev,
-						[generationId]: {
-							...prev[generationId],
-							...(msg.type === "intermediate" && {
-								preview: msg.images.map((img, idx) => ({ id: imageIds[idx], url: img })),
-							}),
-							...(msg.type === "complete" && {
-								urls: msg.urls.map((url, idx) => ({ id: imageIds[idx], url })),
-							}),
-							...(msg.type === "error" && { error: msg.message }),
-						},
-					}));
+					const msg: {
+						type: string;
+						images: string[];
+						urls: string[];
+						message: string;
+						step?: number;
+					} = JSON.parse(dataLines.join("\n"));
+
+					if (msg.type === "intermediate") {
+						updateGeneration(generationId, {
+							images: msg.images.map((img, idx) => ({ id: imageIds[idx], url: img })),
+							stepsCompleted: msg.step ?? 0,
+						});
+					}
+
+					if (msg.type === "complete") {
+						updateGeneration(generationId, {
+							images: msg.urls.map((url, idx) => ({ id: imageIds[idx], url })),
+							stepsCompleted: payload.steps,
+							isLoading: false,
+						});
+					}
+
+					if (msg.type === "error") {
+						updateGeneration(generationId, {
+							error: msg.message,
+							isLoading: false,
+						});
+					}
 				}
 			}
 		} catch (error) {
-			// Handle errors for this generationId
-			setResults((prev) => ({
-				...prev,
-				[generationId]: {
-					...prev[generationId],
-					error: error instanceof Error ? error.message : "Unknown error",
-				},
-			}));
+			updateGeneration(generationId, {
+				error: error instanceof Error ? error.message : "Unknown error",
+				isLoading: false,
+			});
 		}
 	};
 

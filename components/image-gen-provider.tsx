@@ -1,5 +1,6 @@
 "use client";
 
+import type { User } from "@supabase/supabase-js";
 import {
 	createContext,
 	type Dispatch,
@@ -10,10 +11,15 @@ import {
 	useEffect,
 	useState,
 } from "react";
+import { createGeneration, updateGeneration } from "@/actions/generations";
 import { type GenerationResult, useFluxStream } from "@/hooks/use-flux-stream";
+import { imageSizes } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 import type { Generation, GenerationParams, GenerationRequestParams } from "@/lib/types";
+import { keysToCamelCase } from "@/lib/utils";
 
 interface ImageGenContextType {
+	user: User;
 	genParams: GenerationParams;
 	results: Record<string, GenerationResult>;
 	generationMap: Record<string, Generation>;
@@ -25,11 +31,12 @@ interface ImageGenContextType {
 const ImageGenContext = createContext<ImageGenContextType | undefined>(undefined);
 
 interface ImageGenProviderProps {
+	user: User;
+	userGenerations: Generation[];
 	children: ReactNode;
-	endpoint?: string;
 }
 
-export function ImageGenProvider({ children }: ImageGenProviderProps) {
+export function ImageGenProvider({ user, children, userGenerations }: ImageGenProviderProps) {
 	const { start, results, cancel: cancelGeneration } = useFluxStream();
 	const [generationMap, setGenerationMap] = useState<Record<string, Generation>>({});
 	const [genParams, setGenParams] = useState<GenerationParams>({
@@ -42,59 +49,89 @@ export function ImageGenProvider({ children }: ImageGenProviderProps) {
 	});
 
 	useEffect(() => {
-		// Update generationMap when results change
-		setGenerationMap((prev) => {
-			const updated = { ...prev };
+		const supabase = createClient();
+		const channel = supabase
+			.channel("generation_changes")
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "generations",
+				},
+				(payload: any) => {
+					if (payload.eventType === "UPDATE") {
+						setGenerationMap((prev) => ({
+							...prev,
+							[payload.new.id]: {
+								...prev[payload.new.id],
+								...keysToCamelCase(payload.new),
+							},
+						}));
+					}
+					if (payload.eventType === "DELETE") {
+						setGenerationMap((prev) => {
+							const { [payload.old.id]: _, ...rest } = prev;
+							return rest;
+						});
+					}
+				},
+			)
+			.subscribe();
 
-			Object.entries(results).forEach(([generationId, result]) => {
-				const generation = updated[generationId];
-				if (!generation) return;
+		return () => {
+			supabase.removeChannel(channel);
+		};
+	}, []);
 
-				// If generation is loading and we have preview images, update with preview
-				if (generation.isLoading && result.preview && result.preview.length > 0) {
-					generation.images = result.preview;
-				}
-
-				// If we have final URLs, update with URLs and set loading to false
-				if (result.urls && result.urls.length > 0) {
-					generation.images = result.urls;
-					generation.isLoading = false;
-				}
-
-				// If there's an error, set loading to false and store the error
-				if (result.error) {
-					generation.isLoading = false;
-					generation.error = result.error;
-				}
-			});
-
-			return updated;
-		});
-	}, [results]);
+	useEffect(() => {
+		setGenerationMap(
+			userGenerations.reduce(
+				(acc, generation) => {
+					acc[generation.id] = generation;
+					return acc;
+				},
+				{} as Record<string, Generation>,
+			),
+		);
+	}, [userGenerations]);
 
 	const generateImage = async (generation: GenerationParams) => {
+		// create unique id for generation
 		const prompt_id = crypto.randomUUID();
+
+		// create new generation object
 		const newGeneration: Generation = {
 			id: prompt_id,
+			userId: user.id,
 			prompt: generation.prompt,
 			steps: generation.steps,
 			guidance: generation.guidance,
-			aspectRatio: "1:1",
+			aspectRatio: generation.aspectRatio,
 			images: [],
 			isLoading: true,
 			outputFormat: generation.outputFormat,
 			batchSize: generation.batchSize,
+			stepsCompleted: 0,
+			createdAt: new Date().toISOString(), // this is not sent to db, it just used for sorting optimistically
 		};
 
+		// optimistically update the generation map
 		setGenerationMap((prev) => ({ ...prev, [prompt_id]: newGeneration }));
+
+		// clear the prompt
 		setGenParams((prev) => ({ ...prev, prompt: "" }));
 
+		// create generation in database
+		await createGeneration(newGeneration);
+
+		// create request body
 		const requestBody: GenerationRequestParams = {
 			prompt: generation.prompt,
 			negative_prompt: "",
 			true_cfg_scale: 1,
-			height: 1024,
-			width: 1024,
+			width: imageSizes[generation.aspectRatio as keyof typeof imageSizes][0],
+			height: imageSizes[generation.aspectRatio as keyof typeof imageSizes][1],
 			steps: generation.steps,
 			guidance_scale: generation.guidance,
 			output_quality: 100,
@@ -102,6 +139,7 @@ export function ImageGenProvider({ children }: ImageGenProviderProps) {
 			output_format: generation.outputFormat,
 		};
 
+		// start the generation stream
 		start({ generationId: prompt_id, batchSize: generation.batchSize, payload: requestBody });
 	};
 
@@ -130,6 +168,7 @@ export function ImageGenProvider({ children }: ImageGenProviderProps) {
 	}, [handleKeyDown]);
 
 	const contextValue: ImageGenContextType = {
+		user,
 		genParams,
 		setGenParams,
 		generationMap,

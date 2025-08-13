@@ -14,7 +14,8 @@ export interface Generation extends GenerationParams {
 	isLoading: boolean;
 	error?: string;
 	createdAt: string;
-	updatedAt: string;
+	updatedAt?: string;
+	stepsCompleted: number;
 }
 
 export interface GenerationRequestParams {
