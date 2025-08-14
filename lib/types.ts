@@ -5,6 +5,11 @@ export interface GenerationParams {
 	aspectRatio: string;
 	outputFormat: string;
 	batchSize: number;
+	imageUrl?: string;
+	seed?: number;
+	referenceScale?: number;
+	promptEmbedScale?: number;
+	pooledPromptEmbedScale?: number;
 }
 
 export interface Generation extends GenerationParams {
@@ -29,4 +34,9 @@ export interface GenerationRequestParams {
 	output_quality: number;
 	num_images: number;
 	output_format: string;
+	image_url?: string;
+	seed?: number;
+	reference_scale?: number;
+	prompt_embed_scale?: number;
+	pooled_prompt_embed_scale?: number;
 }

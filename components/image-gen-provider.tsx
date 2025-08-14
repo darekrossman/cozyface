@@ -37,7 +37,13 @@ interface ImageGenProviderProps {
 }
 
 export function ImageGenProvider({ user, children, userGenerations }: ImageGenProviderProps) {
-	const { start, results, cancel: cancelGeneration } = useFluxStream();
+	const {
+		start,
+		results,
+		cancel: cancelGeneration,
+	} = useFluxStream({
+		endpoint: "https://darekrossman--flux-ip-adapter-fluxservice-inference-stream-dev.modal.run",
+	});
 	const [generationMap, setGenerationMap] = useState<Record<string, Generation>>({});
 	const [genParams, setGenParams] = useState<GenerationParams>({
 		prompt: "",
@@ -46,6 +52,11 @@ export function ImageGenProvider({ user, children, userGenerations }: ImageGenPr
 		aspectRatio: "1:1",
 		outputFormat: "WEBP",
 		batchSize: 4,
+		referenceScale: 0.02,
+		promptEmbedScale: 1.0,
+		pooledPromptEmbedScale: 1.0,
+		imageUrl:
+			"https://pub-bd5078e35a584a9aa20c6f636882775c.r2.dev/FLUX%201%20Text%20to%20Image.jpeg",
 	});
 
 	useEffect(() => {
@@ -97,6 +108,7 @@ export function ImageGenProvider({ user, children, userGenerations }: ImageGenPr
 	}, [userGenerations]);
 
 	const generateImage = async (generation: GenerationParams) => {
+		console.log("generation", generation);
 		// create unique id for generation
 		const prompt_id = crypto.randomUUID();
 
@@ -108,11 +120,16 @@ export function ImageGenProvider({ user, children, userGenerations }: ImageGenPr
 			steps: generation.steps,
 			guidance: generation.guidance,
 			aspectRatio: generation.aspectRatio,
+			imageUrl: generation.imageUrl,
 			images: [],
 			isLoading: true,
 			outputFormat: generation.outputFormat,
 			batchSize: generation.batchSize,
+			seed: generation.seed ?? Math.floor(Math.random() * 1000000),
 			stepsCompleted: 0,
+			referenceScale: generation.referenceScale,
+			promptEmbedScale: generation.promptEmbedScale,
+			pooledPromptEmbedScale: generation.pooledPromptEmbedScale,
 			createdAt: new Date().toISOString(), // this is not sent to db, it just used for sorting optimistically
 		};
 
@@ -129,7 +146,7 @@ export function ImageGenProvider({ user, children, userGenerations }: ImageGenPr
 		const requestBody: GenerationRequestParams = {
 			prompt: generation.prompt,
 			negative_prompt: "",
-			true_cfg_scale: 1,
+			true_cfg_scale: 4,
 			width: imageSizes[generation.aspectRatio as keyof typeof imageSizes][0],
 			height: imageSizes[generation.aspectRatio as keyof typeof imageSizes][1],
 			steps: generation.steps,
@@ -137,6 +154,11 @@ export function ImageGenProvider({ user, children, userGenerations }: ImageGenPr
 			output_quality: 100,
 			num_images: generation.batchSize,
 			output_format: generation.outputFormat,
+			image_url: generation.imageUrl,
+			seed: generation.seed,
+			reference_scale: generation.referenceScale,
+			prompt_embed_scale: generation.promptEmbedScale,
+			pooled_prompt_embed_scale: generation.pooledPromptEmbedScale,
 		};
 
 		// start the generation stream

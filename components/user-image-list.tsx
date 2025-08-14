@@ -13,9 +13,7 @@ export default function UserImageList() {
 	});
 
 	return (
-		<div className="w-full relative pt-[var(--header-height)]">
-			<div className="h-10" />
-
+		<div className="w-full relative">
 			<div className="">
 				{Object.keys(generationMap).length > 0 && (
 					<div className="flex flex-col gap-6">

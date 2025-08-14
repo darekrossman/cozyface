@@ -35,11 +35,7 @@ export default function GenerationResult({ generation }: GenerationResultProps) 
 		setDeleteDialogOpen(true);
 	};
 
-	if (generation.isLoading) {
-		console.log(generation);
-	}
-
-	const progress = generation.stepsCompleted / generation.steps;
+	const progress = Math.floor((generation.stepsCompleted / generation.steps) * 100);
 
 	return (
 		<div key={generation.id}>
@@ -89,6 +85,7 @@ export default function GenerationResult({ generation }: GenerationResultProps) 
 								<Link
 									key={id}
 									href={`/image/${id}`}
+									scroll={false}
 									className="relative flex cursor-pointer border-0 p-0 bg-transparent aspect-[var(--aspect-ratio)] overflow-hidden rounded-sm"
 									aria-label={`View generated image ${index + 1} in larger size`}
 								>
@@ -128,22 +125,22 @@ export default function GenerationResult({ generation }: GenerationResultProps) 
 
 					<div className="ml-[-8px] opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none group-hover:pointer-events-auto">
 						<Button
-							variant="secondary"
+							variant="ghost"
 							size="xs"
-							className="text-muted-foreground"
+							className="text-white/80"
 							onClick={() => generateImage(generation)}
 						>
-							<RotateCcw strokeWidth={1} className="size-[14px]" />
+							<RotateCcw className="size-[14px]" />
 							Rerun
 						</Button>
 
 						<Button
 							variant="ghost"
 							size="xs"
-							className="text-muted-foreground"
+							className="text-white/80"
 							onClick={() => handleDelete()}
 						>
-							<Trash strokeWidth={1} className="size-[14px]" />
+							<Trash className="size-[14px]" />
 							Delete
 						</Button>
 					</div>

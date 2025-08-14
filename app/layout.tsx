@@ -24,7 +24,9 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
-			<body className={`${geistSans.variable} ${geistMono.variable} dark`}>{children}</body>
+			<body className={`${geistSans.variable} ${geistMono.variable} dark overflow-y-hidden`}>
+				<div className="h-dvh overflow-auto">{children}</div>
+			</body>
 		</html>
 	);
 }

@@ -63,6 +63,7 @@ export async function updateGeneration(
 	// Convert camelCase to snake_case for database
 	const dbUpdates: Record<string, any> = {};
 	if (updates.images !== undefined) dbUpdates.images = updates.images;
+	if (updates.stepsCompleted !== undefined) dbUpdates.steps_completed = updates.stepsCompleted;
 	if (updates.isLoading !== undefined) dbUpdates.is_loading = updates.isLoading;
 	if (updates.error !== undefined) dbUpdates.error = updates.error;
 
