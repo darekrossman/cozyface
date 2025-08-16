@@ -47,6 +47,7 @@ export type Database = {
           output_format: string
           prompt: string
           steps: number
+          steps_completed: number
           updated_at: string
           user_id: string
         }
@@ -62,6 +63,7 @@ export type Database = {
           output_format: string
           prompt: string
           steps: number
+          steps_completed?: number
           updated_at?: string
           user_id: string
         }
@@ -77,6 +79,7 @@ export type Database = {
           output_format?: string
           prompt?: string
           steps?: number
+          steps_completed?: number
           updated_at?: string
           user_id?: string
         }

@@ -10,8 +10,16 @@ create table public.generations (
   output_format text not null,
   batch_size integer not null check (batch_size >= 1 and batch_size <= 10),
   images jsonb not null default '[]'::jsonb,
+  image_urls text[],
   is_loading boolean not null default true,
   error text,
+  width integer default 1024,
+  height integer default 1024,
+  prompt_embed_scale numeric(6,3),
+  pooled_prompt_embed_scale numeric(6,3),
+  reference_scale numeric(6,3),
+  cfg numeric(3,1) default 1,
+  seed integer default -1,
   created_at timestamp with time zone default now() not null,
   updated_at timestamp with time zone default now() not null
 );

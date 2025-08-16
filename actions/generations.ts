@@ -11,30 +11,37 @@ import type { Generation } from "@/lib/types";
  * @throws Error if creation fails or user is not authenticated
  */
 export async function createGeneration(generation: Generation): Promise<Generation> {
-	const supabase = await createClient();
+  const supabase = await createClient();
 
-	const { data, error } = await supabase
-		.from("generations")
-		.insert({
-			id: generation.id,
-			user_id: generation.userId,
-			prompt: generation.prompt,
-			guidance: generation.guidance,
-			steps: generation.steps,
-			aspect_ratio: generation.aspectRatio,
-			output_format: generation.outputFormat,
-			batch_size: generation.batchSize,
-			images: generation.images,
-			is_loading: generation.isLoading,
-		})
-		.select()
-		.single();
+  const { data, error } = await supabase
+    .from("generations")
+    .insert({
+      id: generation.id,
+      user_id: generation.userId,
+      prompt: generation.prompt,
+      guidance: generation.guidance,
+      steps: generation.steps,
+      aspect_ratio: generation.aspectRatio,
+      output_format: generation.outputFormat,
+      batch_size: generation.batchSize,
+      images: generation.images,
+      is_loading: generation.isLoading,
+      width: generation.width,
+      height: generation.height,
+      prompt_embed_scale: generation.promptEmbedScale,
+      pooled_prompt_embed_scale: generation.pooledPromptEmbedScale,
+      reference_scale: generation.referenceScale,
+      seed: generation.seed,
+      image_urls: generation.imageUrls,
+    })
+    .select()
+    .single();
 
-	if (error) {
-		throw new Error(`Failed to create generation: ${error.message}`);
-	}
+  if (error) {
+    throw new Error(`Failed to create generation: ${error.message}`);
+  }
 
-	return data;
+  return data;
 }
 
 /**
@@ -45,59 +52,67 @@ export async function createGeneration(generation: Generation): Promise<Generati
  * @throws Error if update fails, generation not found, or user not authorized
  */
 export async function updateGeneration(
-	id: string,
-	updates: Partial<{
-		images?: { id: string; url: string }[];
-		stepsCompleted?: number;
-		isLoading?: boolean;
-		error?: string;
-	}>,
+  id: string,
+  updates: Partial<{
+    images?: { id: string; url: string }[];
+    stepsCompleted?: number;
+    isLoading?: boolean;
+    error?: string;
+  }>,
 ): Promise<Generation> {
-	const supabase = await createClient();
-	const userId = await getCurrentUserId();
+  const supabase = await createClient();
+  const userId = await getCurrentUserId();
 
-	if (!userId) {
-		throw new Error("User must be authenticated to update generations");
-	}
+  if (!userId) {
+    throw new Error("User must be authenticated to update generations");
+  }
 
-	// Convert camelCase to snake_case for database
-	const dbUpdates: Record<string, any> = {};
-	if (updates.images !== undefined) dbUpdates.images = updates.images;
-	if (updates.stepsCompleted !== undefined) dbUpdates.steps_completed = updates.stepsCompleted;
-	if (updates.isLoading !== undefined) dbUpdates.is_loading = updates.isLoading;
-	if (updates.error !== undefined) dbUpdates.error = updates.error;
+  // Convert camelCase to snake_case for database
+  const dbUpdates: Record<string, any> = {};
+  if (updates.images !== undefined) dbUpdates.images = updates.images;
+  if (updates.stepsCompleted !== undefined) dbUpdates.steps_completed = updates.stepsCompleted;
+  if (updates.isLoading !== undefined) dbUpdates.is_loading = updates.isLoading;
+  if (updates.error !== undefined) dbUpdates.error = updates.error;
 
-	const { data, error } = await supabase
-		.from("generations")
-		.update(dbUpdates)
-		.eq("id", id)
-		.eq("user_id", userId) // Ensure user can only update their own generations
-		.select()
-		.single();
+  const { data, error } = await supabase
+    .from("generations")
+    .update(dbUpdates)
+    .eq("id", id)
+    .eq("user_id", userId) // Ensure user can only update their own generations
+    .select()
+    .single();
 
-	if (error) {
-		if (error.code === "PGRST116") {
-			throw new Error("Generation not found or you don't have permission to update it");
-		}
-		throw new Error(`Failed to update generation: ${error.message}`);
-	}
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new Error("Generation not found or you don't have permission to update it");
+    }
+    throw new Error(`Failed to update generation: ${error.message}`);
+  }
 
-	return {
-		id: data.id,
-		userId: data.user_id,
-		prompt: data.prompt,
-		guidance: data.guidance,
-		steps: data.steps,
-		stepsCompleted: data.steps_completed,
-		aspectRatio: data.aspect_ratio,
-		outputFormat: data.output_format,
-		batchSize: data.batch_size,
-		images: data.images,
-		isLoading: data.is_loading,
-		error: data.error,
-		createdAt: data.created_at,
-		updatedAt: data.updated_at,
-	};
+  return {
+    id: data.id,
+    userId: data.user_id,
+    prompt: data.prompt,
+    guidance: data.guidance,
+    cfg: data.cfg,
+    steps: data.steps,
+    stepsCompleted: data.steps_completed,
+    aspectRatio: data.aspect_ratio,
+    outputFormat: data.output_format,
+    batchSize: data.batch_size,
+    images: data.images,
+    isLoading: data.is_loading,
+    error: data.error,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    width: data.width,
+    height: data.height,
+    promptEmbedScale: data.prompt_embed_scale,
+    pooledPromptEmbedScale: data.pooled_prompt_embed_scale,
+    referenceScale: data.reference_scale,
+    seed: data.seed,
+    imageUrls: data.image_urls,
+  };
 }
 
 /**
@@ -106,39 +121,47 @@ export async function updateGeneration(
  * @throws Error if user is not authenticated
  */
 export async function getUserGenerations(): Promise<Generation[]> {
-	const supabase = await createClient();
-	const userId = await getCurrentUserId();
+  const supabase = await createClient();
+  const userId = await getCurrentUserId();
 
-	if (!userId) {
-		throw new Error("User must be authenticated to view generations");
-	}
+  if (!userId) {
+    throw new Error("User must be authenticated to view generations");
+  }
 
-	const { data, error } = await supabase
-		.from("generations")
-		.select("*")
-		.eq("user_id", userId)
-		.order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("generations")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
 
-	if (error) {
-		throw new Error(`Failed to fetch generations: ${error.message}`);
-	}
+  if (error) {
+    throw new Error(`Failed to fetch generations: ${error.message}`);
+  }
 
-	return data.map((item) => ({
-		id: item.id,
-		userId: item.user_id,
-		prompt: item.prompt,
-		guidance: item.guidance,
-		steps: item.steps,
-		stepsCompleted: item.steps_completed,
-		aspectRatio: item.aspect_ratio,
-		outputFormat: item.output_format,
-		batchSize: item.batch_size,
-		images: item.images,
-		isLoading: item.is_loading,
-		error: item.error,
-		createdAt: item.created_at,
-		updatedAt: item.updated_at,
-	}));
+  return data.map((item) => ({
+    id: item.id,
+    userId: item.user_id,
+    prompt: item.prompt,
+    guidance: item.guidance,
+    cfg: item.cfg,
+    steps: item.steps,
+    stepsCompleted: item.steps_completed,
+    aspectRatio: item.aspect_ratio,
+    outputFormat: item.output_format,
+    batchSize: item.batch_size,
+    images: item.images,
+    isLoading: item.is_loading,
+    error: item.error,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+    width: item.width,
+    height: item.height,
+    promptEmbedScale: item.prompt_embed_scale,
+    pooledPromptEmbedScale: item.pooled_prompt_embed_scale,
+    referenceScale: item.reference_scale,
+    seed: item.seed,
+    imageUrls: item.image_urls,
+  }));
 }
 
 /**
@@ -148,43 +171,51 @@ export async function getUserGenerations(): Promise<Generation[]> {
  * @throws Error if generation not found, user not authorized, or not authenticated
  */
 export async function getGeneration(id: string): Promise<Generation> {
-	const supabase = await createClient();
-	const userId = await getCurrentUserId();
+  const supabase = await createClient();
+  const userId = await getCurrentUserId();
 
-	if (!userId) {
-		throw new Error("User must be authenticated to view generations");
-	}
+  if (!userId) {
+    throw new Error("User must be authenticated to view generations");
+  }
 
-	const { data, error } = await supabase
-		.from("generations")
-		.select("*")
-		.eq("id", id)
-		.eq("user_id", userId)
-		.single();
+  const { data, error } = await supabase
+    .from("generations")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .single();
 
-	if (error) {
-		if (error.code === "PGRST116") {
-			throw new Error("Generation not found or you don't have permission to view it");
-		}
-		throw new Error(`Failed to fetch generation: ${error.message}`);
-	}
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new Error("Generation not found or you don't have permission to view it");
+    }
+    throw new Error(`Failed to fetch generation: ${error.message}`);
+  }
 
-	return {
-		id: data.id,
-		userId: data.user_id,
-		prompt: data.prompt,
-		guidance: data.guidance,
-		steps: data.steps,
-		stepsCompleted: data.steps_completed,
-		aspectRatio: data.aspect_ratio,
-		outputFormat: data.output_format,
-		batchSize: data.batch_size,
-		images: data.images,
-		isLoading: data.is_loading,
-		error: data.error,
-		createdAt: data.created_at,
-		updatedAt: data.updated_at,
-	};
+  return {
+    id: data.id,
+    userId: data.user_id,
+    prompt: data.prompt,
+    guidance: data.guidance,
+    cfg: data.cfg,
+    steps: data.steps,
+    stepsCompleted: data.steps_completed,
+    aspectRatio: data.aspect_ratio,
+    outputFormat: data.output_format,
+    batchSize: data.batch_size,
+    images: data.images,
+    isLoading: data.is_loading,
+    error: data.error,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    width: data.width,
+    height: data.height,
+    promptEmbedScale: data.prompt_embed_scale,
+    pooledPromptEmbedScale: data.pooled_prompt_embed_scale,
+    referenceScale: data.reference_scale,
+    seed: data.seed,
+    imageUrls: data.image_urls,
+  };
 }
 
 /**
@@ -193,18 +224,18 @@ export async function getGeneration(id: string): Promise<Generation> {
  * @throws Error if deletion fails, generation not found, or user not authorized
  */
 export async function deleteGeneration(id: string): Promise<void> {
-	const supabase = await createClient();
-	const userId = await getCurrentUserId();
+  const supabase = await createClient();
+  const userId = await getCurrentUserId();
 
-	if (!userId) {
-		throw new Error("User must be authenticated to delete generations");
-	}
+  if (!userId) {
+    throw new Error("User must be authenticated to delete generations");
+  }
 
-	const { error } = await supabase.from("generations").delete().eq("id", id).eq("user_id", userId);
+  const { error } = await supabase.from("generations").delete().eq("id", id).eq("user_id", userId);
 
-	if (error) {
-		throw new Error(`Failed to delete generation: ${error.message}`);
-	}
+  if (error) {
+    throw new Error(`Failed to delete generation: ${error.message}`);
+  }
 }
 
 /**
@@ -214,43 +245,51 @@ export async function deleteGeneration(id: string): Promise<void> {
  * @throws Error if generation not found, user not authorized, or not authenticated
  */
 export async function getGenerationByImageId(imageId: string): Promise<Generation> {
-	const supabase = await createClient();
-	const userId = await getCurrentUserId();
+  const supabase = await createClient();
+  const userId = await getCurrentUserId();
 
-	if (!userId) {
-		throw new Error("User must be authenticated to view generations");
-	}
+  if (!userId) {
+    throw new Error("User must be authenticated to view generations");
+  }
 
-	// Search for a generation that contains an image with the specified ID
-	// Using PostgreSQL JSONB operators to search within the images array
-	const { data, error } = await supabase
-		.from("generations")
-		.select("*")
-		.eq("user_id", userId)
-		.filter("images", "cs", `[{"id":"${imageId}"}]`)
-		.single();
+  // Search for a generation that contains an image with the specified ID
+  // Using PostgreSQL JSONB operators to search within the images array
+  const { data, error } = await supabase
+    .from("generations")
+    .select("*")
+    .eq("user_id", userId)
+    .filter("images", "cs", `[{"id":"${imageId}"}]`)
+    .single();
 
-	if (error) {
-		if (error.code === "PGRST116") {
-			throw new Error("Generation not found or you don't have permission to view it");
-		}
-		throw new Error(`Failed to fetch generation by image ID: ${error.message}`);
-	}
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new Error("Generation not found or you don't have permission to view it");
+    }
+    throw new Error(`Failed to fetch generation by image ID: ${error.message}`);
+  }
 
-	return {
-		id: data.id,
-		userId: data.user_id,
-		prompt: data.prompt,
-		guidance: data.guidance,
-		steps: data.steps,
-		stepsCompleted: data.steps_completed,
-		aspectRatio: data.aspect_ratio,
-		outputFormat: data.output_format,
-		batchSize: data.batch_size,
-		images: data.images,
-		isLoading: data.is_loading,
-		error: data.error,
-		createdAt: data.created_at,
-		updatedAt: data.updated_at,
-	};
+  return {
+    id: data.id,
+    userId: data.user_id,
+    prompt: data.prompt,
+    guidance: data.guidance,
+    cfg: data.cfg,
+    steps: data.steps,
+    stepsCompleted: data.steps_completed,
+    aspectRatio: data.aspect_ratio,
+    outputFormat: data.output_format,
+    batchSize: data.batch_size,
+    images: data.images,
+    isLoading: data.is_loading,
+    error: data.error,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    width: data.width,
+    height: data.height,
+    promptEmbedScale: data.prompt_embed_scale,
+    pooledPromptEmbedScale: data.pooled_prompt_embed_scale,
+    referenceScale: data.reference_scale,
+    seed: data.seed,
+    imageUrls: data.image_urls,
+  };
 }
